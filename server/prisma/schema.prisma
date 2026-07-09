@@ -4,10 +4,270 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+
+enum Gender {
+  MALE
+  FEMALE
+  NON_BINARY
+  PREFER_NOT_TO_SAY
+}
+
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  PROFESSIONAL
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  BANNED
+}
+
+
+/// User Model
+model User {
+  id              String      @id @default(uuid()) @db.Uuid
+
+  name            String
+  email           String      @unique
+  password        String
+
+  phoneNumber     String?     @unique
+  profileImageUrl String?
+  bio             String?
+
+  gender          Gender?
+  dateOfBirth     DateTime?
+
+  homeCity        String
+  homeState       String?
+  homeCountry     String
+
+  /// PostGIS Geography Point
+  currentLocation Unsupported("geography(Point,4326)")?
+
+  trustScore Float @default(100)
+
+  isVerified      Boolean     @default(false)
+
+  accountStatus AccountStatus @default(ACTIVE)
+
+  deletedAt       DateTime?
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  sports          UserSport[]
+
+  organizedActivities Activity[]            @relation("OrganizerActivities")
+
+  joinedActivities ActivityParticipant[]
+
+  approvedParticipants ActivityParticipant[] @relation("ApprovedParticipants")
+
+  receivedInvitations ActivityInvitation[] @relation("UserInvitations")
+
+  sentInvitations ActivityInvitation[] @relation("SentInvitations")
+
+  @@index([homeCity])
+  @@index([homeCountry])
+}
+
+//UserSport Model
+
+model UserSport {
+
+  id          String      @id @default(uuid()) @db.Uuid
+
+  userId      String      @db.Uuid
+
+  activityType ActivityType
+
+  skillLevel  SkillLevel
+
+  createdAt   DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+
+  @@index([activityType])
+
+  @@unique([userId, activityType])
+}
+
+
+enum ActivityType {
+  BADMINTON
+  CRICKET
+  FOOTBALL
+  VOLLEYBALL
+  TENNIS
+  RUNNING
+  CYCLING
+  TREKKING
+  CAB_SHARE
+  OTHER
+}
+
+enum ActivityStatus {
+  OPEN
+  FULL
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+model Activity {
+  id                    String           @id @default(uuid()) @db.Uuid
+
+  title                 String
+  description           String?
+
+  activityType          ActivityType
+
+  venueName             String
+  venueAddress          String?
+
+  /// PostGIS Geography Point
+  location              Unsupported("geography(Point,4326)")
+
+  startsAt              DateTime
+  endsAt                DateTime
+
+  maxParticipants       Int              @default(2)
+
+  status                ActivityStatus   @default(OPEN)
+
+  minimumSkillLevel     SkillLevel?
+  notes                 String?
+  cancelReason          String?
+
+  invitations ActivityInvitation[]
+
+  isPrivate Boolean @default(false)
+
+  endedAt               DateTime?
+
+  deletedAt             DateTime?
+
+  joinApprovalRequired  Boolean          @default(true)
+
+  organizerId           String           @db.Uuid
+
+  organizer             User             @relation("OrganizerActivities", fields: [organizerId], references: [id], onDelete: Cascade)
+
+  participants          ActivityParticipant[]
+
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  @@index([activityType, status])
+  @@index([startsAt])
+  @@index([organizerId])
+}
+
+enum ParticipantRole {
+  ORGANIZER
+  PARTICIPANT
+}
+
+enum ParticipantStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  LEFT
+}
+
+model ActivityParticipant {
+
+  id          String              @id @default(uuid()) @db.Uuid
+
+  activityId  String              @db.Uuid
+  userId      String              @db.Uuid
+
+  role        ParticipantRole     @default(PARTICIPANT)
+
+  status      ParticipantStatus   @default(PENDING)
+
+  requestedAt    DateTime            @default(now())
+
+  approvedAt  DateTime?
+
+  updatedAt DateTime @updatedAt
+
+  approvedById String?            @db.Uuid
+
+  approvedBy User? @relation("ApprovedParticipants", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, userId])
+
+  @@index([activityId])
+
+  @@index([userId])
+
+  @@index([status])
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  CANCELLED
+}
+
+
+model ActivityInvitation {
+
+  id String @id @default(uuid()) @db.Uuid
+
+  activityId String @db.Uuid
+
+  invitedUserId String @db.Uuid
+
+  invitedById String @db.Uuid
+
+  status InvitationStatus @default(PENDING)
+
+  message String?
+
+  expiresAt DateTime?
+
+  respondedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  invitedUser User @relation("UserInvitations", fields: [invitedUserId], references: [id],onDelete: Cascade)
+
+  invitedBy User @relation( "SentInvitations", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, invitedUserId])
+
+  @@index([activityId])
+
+  @@index([invitedUserId])
+
+  @@index([status])
 }
