@@ -5,6 +5,7 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import { authRoutes } from './modules/auth/index.js';
 import { userRoutes } from './modules/user/index.js';
+import { activityRoutes } from './modules/activity/index.js';
 import healthRoutes from './modules/health/health.routes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
@@ -45,6 +46,7 @@ app.use('/health', healthRoutes);
 // Auth routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/activities', activityRoutes);
 
 // Catch 404 and forward to error handler
 app.use((req, res) => {
