@@ -47,10 +47,10 @@ export const authorizeStatus = (allowedStatuses: AccountStatus[]) => {
     try {
       const user = await prisma.user.findUnique({
         where: { id: req.user.id },
-        select: { accountStatus: true },
+        select: { accountStatus: true, deletedAt: true },
       });
 
-      if (!user) {
+      if (!user || user.deletedAt !== null) {
         return next(new NotFoundError('User account not found'));
       }
 

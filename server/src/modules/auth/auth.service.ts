@@ -1,10 +1,10 @@
 import { authRepository } from './auth.repository.js';
 import { tokenService } from './token.service.js';
 import { hashPassword, comparePassword } from '../../utils/password.js';
-import { ConflictError, UnauthorizedError, NotFoundError } from '../../errors/customErrors.js';
+import { ConflictError, UnauthorizedError, NotFoundError, ForbiddenError } from '../../errors/customErrors.js';
 import { ErrorMessages } from '../../constants/messages.js';
 import type { SanitizedUser, AuthSuccessPayload } from './auth.types.js';
-import { Prisma } from '../../generated/prisma/client.js';
+import { Prisma, AccountStatus } from '../../generated/prisma/client.js';
 
 export class AuthService {
   /**
@@ -46,6 +46,16 @@ export class AuthService {
       throw new UnauthorizedError(ErrorMessages.INVALID_CREDENTIALS);
     }
 
+    // Verify user is not soft-deleted
+    if (user.deletedAt !== null) {
+      throw new UnauthorizedError(ErrorMessages.INVALID_CREDENTIALS);
+    }
+
+    // Verify user account is ACTIVE
+    if (user.accountStatus !== AccountStatus.ACTIVE) {
+      throw new ForbiddenError('Your account is currently ' + user.accountStatus);
+    }
+
     const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedError(ErrorMessages.INVALID_CREDENTIALS);
@@ -68,8 +78,12 @@ export class AuthService {
    */
   public async getUserProfile(userId: string): Promise<SanitizedUser> {
     const user = await authRepository.findUserById(userId);
-    if (!user) {
+    if (!user || user.deletedAt !== null) {
       throw new NotFoundError(ErrorMessages.NOT_FOUND);
+    }
+
+    if (user.accountStatus !== AccountStatus.ACTIVE) {
+      throw new ForbiddenError('Your account is currently ' + user.accountStatus);
     }
 
     const { password: _, ...sanitizedUser } = user;
