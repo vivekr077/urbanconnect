@@ -7,6 +7,7 @@ import { authRoutes } from './modules/auth/index.js';
 import { userRoutes } from './modules/user/index.js';
 import { activityRoutes } from './modules/activity/index.js';
 import { participantRoutes } from './modules/participant/index.js';
+import { invitationRoutes } from './modules/invitation/index.js';
 import healthRoutes from './modules/health/health.routes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
@@ -48,7 +49,8 @@ app.use('/health', healthRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/activities', activityRoutes);
-app.use('/api/v1', participantRoutes);
+app.use('/api/v1/activities', participantRoutes);
+app.use('/api/v1', invitationRoutes);
 
 // Catch 404 and forward to error handler
 app.use((req, res) => {
