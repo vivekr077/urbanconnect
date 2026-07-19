@@ -58,7 +58,6 @@ model User {
   homeCity        String
   homeState       String?
   homeCountry     String
-
   /// PostGIS Geography Point
   currentLocation Unsupported("geography(Point,4326)")?
 
