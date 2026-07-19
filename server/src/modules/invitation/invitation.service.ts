@@ -109,7 +109,7 @@ export class InvitationService {
       if (existingInvitation.status === InvitationStatus.PENDING) {
         throw new ConflictError('A pending invitation already exists for this user');
       }
-      
+
       // If the invitation was declined, cancelled or expired, we reuse and update the row
       const updated = await invitationRepository.updateInvitation(existingInvitation.id, {
         status: InvitationStatus.PENDING,

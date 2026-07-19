@@ -7,25 +7,32 @@ import { asyncHandler } from '../../utils/asyncHandler.js';
 
 const router = Router();
 
-// Join Activity (Protected)
-router.post(
-  '/activities/:activityId/join',
+// Get My Participation Status (Protected)
+router.get(
+  '/:activityId/participants/me',
   authenticate,
   validate(ActivityIdParamSchema),
-  asyncHandler(participantController.joinActivity)
+  asyncHandler(participantController.getParticipantMe)
 );
 
-// Leave Activity (Protected)
-router.delete(
-  '/activities/:activityId/leave',
+// Pending Requests (Protected)
+router.get(
+  '/:activityId/participants/pending',
   authenticate,
   validate(ActivityIdParamSchema),
-  asyncHandler(participantController.leaveActivity)
+  asyncHandler(participantController.listPendingRequests)
+);
+
+// Get Participants (Public)
+router.get(
+  '/:activityId/participants',
+  validate(ActivityIdParamSchema),
+  asyncHandler(participantController.listParticipants)
 );
 
 // Accept Request (Protected)
 router.patch(
-  '/activities/:activityId/participants/:participantId/accept',
+  '/:activityId/participants/:participantId/accept',
   authenticate,
   validate(ParticipantManageParamSchema),
   asyncHandler(participantController.acceptParticipant)
@@ -33,7 +40,7 @@ router.patch(
 
 // Reject Request (Protected)
 router.patch(
-  '/activities/:activityId/participants/:participantId/reject',
+  '/:activityId/participants/:participantId/reject',
   authenticate,
   validate(ParticipantManageParamSchema),
   asyncHandler(participantController.rejectParticipant)
@@ -41,25 +48,26 @@ router.patch(
 
 // Remove Participant (Protected)
 router.delete(
-  '/activities/:activityId/participants/:participantId',
+  '/:activityId/participants/:participantId',
   authenticate,
   validate(ParticipantManageParamSchema),
   asyncHandler(participantController.removeParticipant)
 );
 
-// Get Participants (Public)
-router.get(
-  '/activities/:activityId/participants',
-  validate(ActivityIdParamSchema),
-  asyncHandler(participantController.listParticipants)
-);
-
-// Pending Requests (Protected)
-router.get(
-  '/activities/:activityId/participants/pending',
+// Join Activity (Protected)
+router.post(
+  '/:activityId/join',
   authenticate,
   validate(ActivityIdParamSchema),
-  asyncHandler(participantController.listPendingRequests)
+  asyncHandler(participantController.joinActivity)
+);
+
+// Leave Activity (Protected)
+router.delete(
+  '/:activityId/leave',
+  authenticate,
+  validate(ActivityIdParamSchema),
+  asyncHandler(participantController.leaveActivity)
 );
 
 export default router;

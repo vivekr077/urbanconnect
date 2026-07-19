@@ -91,6 +91,23 @@ export class ParticipantController {
   };
 
   /**
+   * Retrieves the authenticated user's participation status.
+   */
+  public getParticipantMe = async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      throw new UnauthorizedError('User context not found in request');
+    }
+
+    const { activityId } = req.params;
+    if (typeof activityId !== 'string') {
+      throw new BadRequestError('Activity ID parameter is missing or invalid');
+    }
+
+    const status = await participantService.getParticipantMe(req.user.id, activityId);
+    sendSuccessResponse(res, HttpStatus.OK, 'My participation status retrieved successfully', status);
+  };
+
+  /**
    * Retrieves the accepted participants list.
    */
   public listParticipants = async (req: Request, res: Response): Promise<void> => {
