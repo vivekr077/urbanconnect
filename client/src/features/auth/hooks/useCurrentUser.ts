@@ -35,7 +35,9 @@ export function useCurrentUser() {
   return {
     user: query.data ?? null,
     isLoading: query.isLoading,
+    loading: query.isLoading,
     isAuthenticated: !!query.data,
+    authenticated: !!query.data,
     error: query.error,
     refetch: query.refetch,
     logout: logoutMutation.mutate,

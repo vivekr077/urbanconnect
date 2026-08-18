@@ -1,14 +1,14 @@
 import api from './api';
-import { ApiResponse } from '../types/api';
-import { Activity } from '../types/activity';
+import { ApiResponse, ApiPaginatedResponse } from '../types/api';
+import { Activity, Participant } from '../types/activity';
 
 export const activityService = {
-  async getActivities(params?: any): Promise<ApiResponse<Activity[]>> {
-    const response = await api.get<ApiResponse<Activity[]>>('/activities', { params });
+  async getActivities(params?: any): Promise<ApiPaginatedResponse<Activity[]>> {
+    const response = await api.get<ApiPaginatedResponse<Activity[]>>('/activities', { params });
     return response.data;
   },
 
-  async getActivity(id: string): Promise<ApiResponse<Activity>> {
+  async getActivityById(id: string): Promise<ApiResponse<Activity>> {
     const response = await api.get<ApiResponse<Activity>>(`/activities/${id}`);
     return response.data;
   },
@@ -23,9 +23,29 @@ export const activityService = {
     return response.data;
   },
 
-  async cancelActivity(id: string, cancelReason?: string): Promise<ApiResponse<Activity>> {
-    const response = await api.delete<ApiResponse<Activity>>(`/activities/${id}`, { data: { cancelReason } });
+  async deleteActivity(id: string): Promise<ApiResponse<void>> {
+    const response = await api.delete<ApiResponse<void>>(`/activities/${id}`);
+    return response.data;
+  },
+
+  async getNearbyActivities(params: {
+    latitude: number;
+    longitude: number;
+    radius?: number;
+  }): Promise<ApiResponse<Activity[]>> {
+    const response = await api.get<ApiResponse<Activity[]>>('/activities/nearby', { params });
+    return response.data;
+  },
+
+  async getMyActivities(params?: any): Promise<ApiPaginatedResponse<Activity[]>> {
+    const response = await api.get<ApiPaginatedResponse<Activity[]>>('/activities/my', { params });
+    return response.data;
+  },
+
+  async getParticipants(activityId: string): Promise<ApiResponse<Participant[]>> {
+    const response = await api.get<ApiResponse<Participant[]>>(`/activities/${activityId}/participants`);
     return response.data;
   },
 };
+
 export default activityService;

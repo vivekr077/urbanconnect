@@ -8,8 +8,8 @@ export const publicNavigation = [
 export const appNavigation = [
   { name: 'Dashboard', href: '/dashboard', icon: 'LayoutDashboard' },
   { name: 'Activities', href: '/activities', icon: 'Calendar' },
-  { name: 'Invitations', href: '/invitations', icon: 'Mail' },
-  { name: 'Notifications', href: '/notifications', icon: 'Bell' },
+  { name: 'My Activities', href: '/activities/my', icon: 'Activity' },
+  { name: 'Create Activity', href: '/activities/create', icon: 'PlusCircle' },
+  { name: 'Nearby Activities', href: '/activities/nearby', icon: 'MapPin' },
   { name: 'Profile', href: '/profile', icon: 'User' },
-  { name: 'Settings', href: '/settings', icon: 'Settings' },
 ];

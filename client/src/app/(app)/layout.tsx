@@ -21,6 +21,8 @@ import {
   Moon,
   LogOut,
   Activity,
+  PlusCircle,
+  MapPin,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -31,6 +33,9 @@ const iconMap: Record<string, React.ComponentType<any>> = {
   Bell,
   User,
   Settings,
+  Activity,
+  PlusCircle,
+  MapPin,
 };
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
