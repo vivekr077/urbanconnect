@@ -1,5 +1,6 @@
 export interface SendInvitationInput {
-  invitedUserId: string;
+  invitedUserId?: string | null | undefined;
+  email?: string | null | undefined;
   message?: string | null | undefined;
   expiresAt?: Date | null | undefined;
 }

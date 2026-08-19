@@ -24,8 +24,13 @@ export default function ProfilePage() {
   const { user, isLoading, error } = useCurrentUser();
   const { mutate: updateLocation, isPending: isUpdatingLocation } = useUpdateLocation();
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [mounted, setMounted] = useState(false);
 
-  if (isLoading) {
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || isLoading) {
     return <ProfileLoading />;
   }
 
@@ -212,7 +217,9 @@ export default function ProfilePage() {
                 Current Location Coordinates
               </p>
               <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                {user.currentLocation
+                {user.currentLocation && 
+                typeof user.currentLocation.latitude === 'number' && 
+                typeof user.currentLocation.longitude === 'number'
                   ? `${user.currentLocation.latitude.toFixed(5)}, ${user.currentLocation.longitude.toFixed(5)}`
                   : 'Not registered'}
               </p>

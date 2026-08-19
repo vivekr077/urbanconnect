@@ -12,10 +12,11 @@ export class InvitationController {
     }
 
     const activityId = req.params.activityId as string;
-    const { invitedUserId, message, expiresAt } = req.body;
+    const { invitedUserId, email, message, expiresAt } = req.body;
 
     const invitation = await invitationService.sendInvitation(req.user.id, activityId, {
       invitedUserId,
+      email,
       message,
       expiresAt,
     });

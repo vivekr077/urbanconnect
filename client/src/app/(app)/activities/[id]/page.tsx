@@ -5,9 +5,15 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
 import { useActivity } from '@/features/activity/hooks/useActivity';
-import { useParticipants } from '@/features/activity/hooks/useParticipants';
-import { useJoinActivity, useLeaveActivity } from '@/features/activity/hooks/useParticipation';
+import { useParticipants } from '@/features/participant/hooks/useParticipants';
+import { usePendingParticipants } from '@/features/participant/hooks/usePendingParticipants';
+import { useMyParticipation } from '@/features/participant/hooks/useMyParticipation';
+import { useJoinActivity } from '@/features/participant/hooks/useJoinActivity';
+import { useLeaveActivity } from '@/features/participant/hooks/useLeaveActivity';
 import { useDeleteActivity } from '@/features/activity/hooks/useDeleteActivity';
+import { useSendInvitation } from '@/features/invitation/hooks/useSendInvitation';
+import { JoinLeaveButton } from '@/features/participant/components/JoinLeaveButton';
+import { InviteUserDialog } from '@/features/invitation/components/InviteUserDialog';
 import { Card, CardContent } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -26,7 +32,8 @@ import {
   UsersRound, 
   AlertCircle, 
   ChevronRight,
-  Info 
+  Info,
+  Mail 
 } from 'lucide-react';
 
 const sportThemes: Record<string, { gradient: string; emoji: string }> = {
@@ -48,13 +55,17 @@ export default function ActivityDetailsPage({ params }: { params: Promise<{ id: 
   const { user: currentUser } = useCurrentUser();
   const { data: activity, isLoading: isActivityLoading, error: activityError } = useActivity(id);
   const { data: participants, isLoading: isParticipantsLoading } = useParticipants(id);
+  const { data: myParticipation } = useMyParticipation(id);
+  const { data: pendingRequests } = usePendingParticipants(id);
 
   const joinMutation = useJoinActivity();
   const leaveMutation = useLeaveActivity();
   const deleteMutation = useDeleteActivity();
+  const sendInvitationMutation = useSendInvitation();
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showShareToast, setShowShareToast] = useState(false);
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
   if (isActivityLoading) {
@@ -84,24 +95,28 @@ export default function ActivityDetailsPage({ params }: { params: Promise<{ id: 
 
   const theme = sportThemes[activity.activityType] || sportThemes.OTHER;
   const isOrganizer = currentUser?.id === activity.organizer.id;
-  
-  // Determine user participation status
-  const myParticipant = participants?.find(p => p.userId === currentUser?.id);
-  const isJoined = myParticipant?.status === 'ACCEPTED';
-  const isPending = myParticipant?.status === 'PENDING';
   const isFull = activity.remainingSlots === 0;
 
-  const handleJoinLeave = async () => {
+  const handleJoin = async () => {
     try {
       setActionError(null);
-      if (isJoined || isPending) {
-        await leaveMutation.mutateAsync(activity.id);
-      } else {
-        await joinMutation.mutateAsync(activity.id);
-      }
+      await joinMutation.mutateAsync(activity.id);
     } catch (err: any) {
       setActionError(err.message || 'Operation failed. Please try again.');
     }
+  };
+
+  const handleLeave = async () => {
+    try {
+      setActionError(null);
+      await leaveMutation.mutateAsync(activity.id);
+    } catch (err: any) {
+      setActionError(err.message || 'Operation failed. Please try again.');
+    }
+  };
+
+  const handleSendInvitation = async (payload: { invitedUserId?: string; email?: string; message?: string; expiresAt?: string }) => {
+    await sendInvitationMutation.mutateAsync({ activityId: activity.id, payload });
   };
 
   const handleDeleteActivity = async () => {
@@ -314,43 +329,61 @@ export default function ActivityDetailsPage({ params }: { params: Promise<{ id: 
                 </p>
               </div>
 
-              {/* Main Join Trigger */}
+              {/* Main Actions block */}
               <div className="space-y-3.5">
                 {isOrganizer ? (
-                  <div className="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 rounded-xl p-3.5 text-center text-sm font-bold">
-                    You are hosting this activity
+                  <div className="space-y-3">
+                    <div className="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 rounded-xl p-3.5 text-center text-xs font-bold">
+                      You are hosting this activity
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button
+                        onClick={() => setIsInviteOpen(true)}
+                        className="w-full flex items-center justify-center space-x-2 h-11"
+                      >
+                        <UserPlus className="h-4.5 w-4.5" />
+                        <span>Invite Users</span>
+                      </Button>
+                      <Link href={`/activities/${activity.id}/invitations`} className="w-full">
+                        <Button variant="outline" className="w-full flex items-center justify-center space-x-2 h-11">
+                          <Mail className="h-4.5 w-4.5 text-emerald-500" />
+                          <span>Sent Invites</span>
+                        </Button>
+                      </Link>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Link href={`/activities/${activity.id}/participants`} className="w-full">
+                        <Button variant="outline" className="w-full flex items-center justify-center space-x-1" size="sm">
+                          <Users className="h-4 w-4" />
+                          <span>Players</span>
+                        </Button>
+                      </Link>
+                      <Link href={`/activities/${activity.id}/participants/pending`} className="w-full">
+                        <Button variant="outline" className="w-full flex items-center justify-center space-x-1" size="sm">
+                          <Clock className="h-4 w-4" />
+                          <span>Requests ({pendingRequests?.length || 0})</span>
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 ) : (
-                  <Button
-                    onClick={handleJoinLeave}
-                    disabled={joinMutation.isPending || leaveMutation.isPending || (isFull && !isJoined && !isPending)}
-                    className="w-full h-11"
-                    variant={isJoined ? 'destructive' : isPending ? 'outline' : 'primary'}
-                  >
-                    {joinMutation.isPending || leaveMutation.isPending
-                      ? 'Processing...'
-                      : isJoined
-                      ? 'Leave Activity'
-                      : isPending
-                      ? 'Cancel Join Request'
-                      : isFull
-                      ? 'Game Full'
-                      : activity.joinApprovalRequired
-                      ? 'Request to Join'
-                      : 'Join Activity'}
-                  </Button>
+                  <>
+                    <JoinLeaveButton
+                      status={myParticipation?.status || null}
+                      onJoin={handleJoin}
+                      onLeave={handleLeave}
+                      isLoading={joinMutation.isPending || leaveMutation.isPending}
+                      isFull={isFull}
+                      className="w-full h-11"
+                    />
+                    <div className="grid grid-cols-1 gap-2 pt-1.5">
+                      <Button variant="outline" onClick={handleShare} className="w-full flex items-center justify-center space-x-1.5 h-10">
+                        <Share2 className="h-4 w-4" />
+                        <span>Share Activity</span>
+                      </Button>
+                    </div>
+                  </>
                 )}
-
-                <div className="grid grid-cols-2 gap-3.5">
-                  <Button variant="outline" onClick={handleShare} className="w-full flex items-center justify-center space-x-1">
-                    <Share2 className="h-4 w-4" />
-                    <span>Share</span>
-                  </Button>
-                  <Button variant="outline" className="w-full flex items-center justify-center space-x-1">
-                    <UserPlus className="h-4 w-4" />
-                    <span>Invite</span>
-                  </Button>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -393,6 +426,13 @@ export default function ActivityDetailsPage({ params }: { params: Promise<{ id: 
         </div>
 
       </div>
+
+      <InviteUserDialog
+        isOpen={isInviteOpen}
+        onClose={() => setIsInviteOpen(false)}
+        onSend={handleSendInvitation}
+        isSending={sendInvitationMutation.isPending}
+      />
     </div>
   );
 }

@@ -54,7 +54,7 @@ app.use('/health', healthRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/activities', activityRoutes);
-app.use('/api/v1', participantRoutes);
+app.use('/api/v1/activities', participantRoutes);
 app.use('/api/v1', invitationRoutes);
 
 // Catch 404 and forward to error handler

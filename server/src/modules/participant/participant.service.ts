@@ -219,12 +219,20 @@ export class ParticipantService {
     const participants = await participantRepository.listParticipants(activityId, ParticipantStatus.ACCEPTED);
     return participants.map((p) => ({
       id: p.id,
-      userId: p.user.id,
-      name: p.user.name,
-      profileImageUrl: p.user.profileImageUrl,
-      trustScore: p.user.trustScore,
+      activityId: p.activityId,
+      userId: p.userId,
       role: p.role,
       status: p.status,
+      requestedAt: p.requestedAt,
+      approvedAt: p.approvedAt,
+      approvedById: p.approvedById,
+      updatedAt: p.updatedAt,
+      user: {
+        id: p.user.id,
+        name: p.user.name,
+        profileImageUrl: p.user.profileImageUrl,
+        trustScore: p.user.trustScore,
+      },
     }));
   }
 
@@ -238,12 +246,20 @@ export class ParticipantService {
     const participants = await participantRepository.listParticipants(activityId, ParticipantStatus.PENDING);
     return participants.map((p) => ({
       id: p.id,
-      userId: p.user.id,
-      name: p.user.name,
-      profileImageUrl: p.user.profileImageUrl,
-      trustScore: p.user.trustScore,
+      activityId: p.activityId,
+      userId: p.userId,
       role: p.role,
       status: p.status,
+      requestedAt: p.requestedAt,
+      approvedAt: p.approvedAt,
+      approvedById: p.approvedById,
+      updatedAt: p.updatedAt,
+      user: {
+        id: p.user.id,
+        name: p.user.name,
+        profileImageUrl: p.user.profileImageUrl,
+        trustScore: p.user.trustScore,
+      },
     }));
   }
 }

@@ -17,19 +17,25 @@ export const validate = (schema: AnyZodObject) => {
         query: req.query,
         params: req.params,
       });
-      req.body = parsed.body;
+      if ('body' in schema.shape) {
+        req.body = parsed.body;
+      }
       
-      Object.defineProperty(req, 'query', {
-        value: parsed.query,
-        writable: true,
-        configurable: true,
-      });
+      if ('query' in schema.shape) {
+        Object.defineProperty(req, 'query', {
+          value: parsed.query,
+          writable: true,
+          configurable: true,
+        });
+      }
       
-      Object.defineProperty(req, 'params', {
-        value: parsed.params,
-        writable: true,
-        configurable: true,
-      });
+      if ('params' in schema.shape) {
+        Object.defineProperty(req, 'params', {
+          value: parsed.params,
+          writable: true,
+          configurable: true,
+        });
+      }
       
       next();
     } catch (error) {

@@ -69,10 +69,26 @@ export class InvitationService {
       throw new BadRequestError('Cannot send invitation for an activity that has already started');
     }
 
+    // Resolve user ID from email if invitedUserId is not provided
+    let targetUserId = input.invitedUserId;
+    if (!targetUserId && input.email) {
+      const userByEmail = await prisma.user.findUnique({
+        where: { email: input.email.trim().toLowerCase(), deletedAt: null },
+      });
+      if (!userByEmail) {
+        throw new NotFoundError('User with this email not found');
+      }
+      targetUserId = userByEmail.id;
+    }
+
+    if (!targetUserId) {
+      throw new BadRequestError('Either invitedUserId or email must be provided');
+    }
+
     // 5. Validate target user is not already an accepted participant
     const existingParticipant = await invitationRepository.findParticipantByActivityAndUser(
       activityId,
-      input.invitedUserId
+      targetUserId
     );
     if (existingParticipant && existingParticipant.status === ParticipantStatus.ACCEPTED) {
       throw new ConflictError('User is already a participant in this activity');
@@ -84,25 +100,25 @@ export class InvitationService {
     }
 
     // 7. Fetch and validate invited user
-    const invitedUser = await invitationRepository.findUserById(input.invitedUserId);
+    const invitedUser = await invitationRepository.findUserById(targetUserId);
     if (!invitedUser || invitedUser.deletedAt !== null) {
       throw new NotFoundError('User not found');
     }
 
     // 8. Validate self invitation rules
-    if (input.invitedUserId === organizerId) {
+    if (targetUserId === organizerId) {
       throw new BadRequestError('You cannot invite yourself');
     }
 
     // 9. Validate organizer invitation rules
-    if (activity.organizerId === input.invitedUserId) {
+    if (activity.organizerId === targetUserId) {
       throw new BadRequestError('You cannot invite the organizer of the activity');
     }
 
     // 10. Check if an invitation record already exists for this pair due to DB unique constraints
     const existingInvitation = await invitationRepository.findInvitationByActivityAndUser(
       activityId,
-      input.invitedUserId
+      targetUserId
     );
 
     if (existingInvitation) {
@@ -124,7 +140,7 @@ export class InvitationService {
     // 11. Create new invitation record and return mapped DTO
     const invitation = await invitationRepository.create(
       activityId,
-      input.invitedUserId,
+      targetUserId,
       organizerId,
       input.message,
       input.expiresAt

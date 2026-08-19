@@ -12,9 +12,11 @@ export const queryKeys = {
   },
   participant: {
     list: (activityId: string) => ["participants", activityId],
+    pending: (activityId: string) => ["participants", "pending", activityId],
+    me: (activityId: string) => ["participants", "me", activityId],
   },
   invitation: {
     received: ["invitations", "received"],
-    sent: (id: string) => ["invitations", id],
+    sent: (activityId: string) => ["invitations", "sent", activityId],
   },
 };

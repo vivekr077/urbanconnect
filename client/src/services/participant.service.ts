@@ -13,27 +13,27 @@ export const participantService = {
     return response.data;
   },
 
-  async acceptJoinRequest(activityId: string, userId: string): Promise<ApiResponse<Participant>> {
-    const response = await api.patch<ApiResponse<Participant>>(`/activities/${activityId}/participants/${userId}/accept`);
+  async acceptParticipant(activityId: string, participantId: string): Promise<ApiResponse<Participant>> {
+    const response = await api.patch<ApiResponse<Participant>>(`/activities/${activityId}/participants/${participantId}/accept`);
     return response.data;
   },
 
-  async rejectJoinRequest(activityId: string, userId: string): Promise<ApiResponse<Participant>> {
-    const response = await api.patch<ApiResponse<Participant>>(`/activities/${activityId}/participants/${userId}/reject`);
+  async rejectParticipant(activityId: string, participantId: string): Promise<ApiResponse<Participant>> {
+    const response = await api.patch<ApiResponse<Participant>>(`/activities/${activityId}/participants/${participantId}/reject`);
     return response.data;
   },
 
-  async removeParticipant(activityId: string, userId: string): Promise<ApiResponse<void>> {
-    const response = await api.delete<ApiResponse<void>>(`/activities/${activityId}/participants/${userId}`);
+  async removeParticipant(activityId: string, participantId: string): Promise<ApiResponse<void>> {
+    const response = await api.delete<ApiResponse<void>>(`/activities/${activityId}/participants/${participantId}`);
     return response.data;
   },
 
-  async listParticipants(activityId: string): Promise<ApiResponse<Participant[]>> {
+  async getParticipants(activityId: string): Promise<ApiResponse<Participant[]>> {
     const response = await api.get<ApiResponse<Participant[]>>(`/activities/${activityId}/participants`);
     return response.data;
   },
 
-  async listPendingRequests(activityId: string): Promise<ApiResponse<Participant[]>> {
+  async getPendingRequests(activityId: string): Promise<ApiResponse<Participant[]>> {
     const response = await api.get<ApiResponse<Participant[]>>(`/activities/${activityId}/participants/pending`);
     return response.data;
   },
@@ -42,5 +42,20 @@ export const participantService = {
     const response = await api.get<ApiResponse<Participant>>(`/activities/${activityId}/participants/me`);
     return response.data;
   },
+
+  // Aliases for compatibility
+  acceptJoinRequest(activityId: string, userId: string): Promise<ApiResponse<Participant>> {
+    return this.acceptParticipant(activityId, userId);
+  },
+  rejectJoinRequest(activityId: string, userId: string): Promise<ApiResponse<Participant>> {
+    return this.rejectParticipant(activityId, userId);
+  },
+  listParticipants(activityId: string): Promise<ApiResponse<Participant[]>> {
+    return this.getParticipants(activityId);
+  },
+  listPendingRequests(activityId: string): Promise<ApiResponse<Participant[]>> {
+    return this.getPendingRequests(activityId);
+  },
 };
+
 export default participantService;
